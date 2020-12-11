@@ -7,7 +7,13 @@ def create_spark_views(spark: SparkSession, supplier_car_data: str):
     spark.read.json(supplier_car_data).createOrReplaceTempView("supplier_car")
 
 def return_ten_columns(spark: SparkSession):
-    result = spark.sql("""SELECT * FROM supplier_car limit 10""").collect()
+    result = spark.sql(
+        """
+            SELECT *
+            FROM supplier_car
+            limit 10
+        """
+    ).collect()
     return result
 
 def run_transformations(spark: SparkSession, supplier_car_data: str, output_location: str):
@@ -16,7 +22,7 @@ def run_transformations(spark: SparkSession, supplier_car_data: str, output_loca
     supplier_df = spark.createDataFrame(data=transformed_view)
     pandas_supplier_df = supplier_df.toPandas()
     # create excel writer
-    with  pd.ExcelWriter('target_data.xlsx') as writer:
+    with  pd.ExcelWriter(output_location) as writer:
         # write dataframe to excel sheet named 'marks'
         pandas_supplier_df.to_excel(writer)
         # save the excel file
@@ -38,7 +44,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='DataTest')
     parser.add_argument('--supplier_car', required=False, default="./src/input_data/supplier_car.json")
-    parser.add_argument('--output_location', required=False, default="./src/output_data/target_data.csv")
+    parser.add_argument('--output_location', required=False, default="./src/output_data/target_data.xlsx")
     args = vars(parser.parse_args())
 
     run_transformations(spark_session, args['supplier_car'], args['output_location'])
