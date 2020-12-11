@@ -14,10 +14,11 @@ def run_transformations(spark: SparkSession, supplier_car_data: str, output_loca
     create_spark_views(spark, supplier_car_data)
     transformed_view = return_ten_columns(spark)
     supplier_df = spark.createDataFrame(data=transformed_view)
+    pandas_supplier_df = supplier_df.toPandas()
     # create excel writer
     with  pd.ExcelWriter('target_data.xlsx') as writer:
         # write dataframe to excel sheet named 'marks'
-        supplier_df.to_excel(writer)
+        pandas_supplier_df.to_excel(writer)
         # save the excel file
         writer.save()
     print('DataFrame is written successfully to Excel Sheet.')
