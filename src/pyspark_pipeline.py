@@ -6,31 +6,47 @@ from pyspark.sql import SparkSession
 def create_spark_views(spark: SparkSession, supplier_car_data: str):
     spark.read.json(supplier_car_data).createOrReplaceTempView("supplier_car")
 
-def return_ten_columns(spark: SparkSession):
+def collect_table(spark: SparkSession):
     result = spark.sql(
         """
-            SELECT *
-            FROM supplier_car
-            limit 10
+            SELECT 
+                ''          AS carType,
+                ''          AS color,
+                ''          AS condition,
+                ''          AS currency,
+                ''          AS drive,
+                ''          AS city,
+                ''          AS country,
+                MakeText    AS make,
+                ''          AS manufacture_year,
+                ''          AS milage,
+                ''          AS milage_unit,
+                ModelText   AS model,
+                TypeName    AS model_variant,
+                ''          AS price_on_request,
+                'car'       AS type,
+                ''          AS zip,
+                ''          AS manufacture_month,
+                ''          AS fuel_consumption_unit
+            FROM 
+                supplier_car
         """
     ).collect()
     return result
 
-def run_transformations(spark: SparkSession, supplier_car_data: str, output_location: str):
+def pre_processing(spark: SparkSession, supplier_car_data: str, output_location: str):
+    # runs the data transformations
     create_spark_views(spark, supplier_car_data)
-    transformed_view = return_ten_columns(spark)
+    transformed_view = collect_table(spark)
     supplier_df = spark.createDataFrame(data=transformed_view)
     pandas_supplier_df = supplier_df.toPandas()
-    # create excel writer
+    # creates excel writer
     with  pd.ExcelWriter(output_location) as writer:
-        # write dataframe to excel sheet named 'marks'
+        # writes dataframe to excel sheet
         pandas_supplier_df.to_excel(writer)
         # save the excel file
         writer.save()
-    print('DataFrame is written successfully to Excel Sheet.')
-
-def to_canonical_date_str(date_to_transform):
-    return date_to_transform.strftime('%Y-%m-%d')
+    print('The DataFrame has been successfully written to an Excel Sheet.')
 
 
 if __name__ == "__main__":
@@ -42,9 +58,9 @@ if __name__ == "__main__":
                         .getOrCreate()
     )
 
-    parser = argparse.ArgumentParser(description='DataTest')
+    parser = argparse.ArgumentParser(description='SupplierCarLoad')
     parser.add_argument('--supplier_car', required=False, default="./src/input_data/supplier_car.json")
     parser.add_argument('--output_location', required=False, default="./src/output_data/target_data.xlsx")
     args = vars(parser.parse_args())
 
-    run_transformations(spark_session, args['supplier_car'], args['output_location'])
+    pre_processing(spark_session, args['supplier_car'], args['output_location'])
