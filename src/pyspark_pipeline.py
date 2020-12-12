@@ -7,6 +7,7 @@ def create_spark_views(spark: SparkSession, supplier_car_data: str):
     spark.read.json(supplier_car_data).createOrReplaceTempView("supplier_car")
 
 def collect_table(spark: SparkSession):
+    # Builds a table from the csv file and transforms it to fit the target_data sheet.
     result = spark.sql(
         """
             SELECT 
@@ -35,7 +36,7 @@ def collect_table(spark: SparkSession):
     return result
 
 def pre_processing(spark: SparkSession, supplier_car_data: str, output_location: str):
-    # runs the data transformations
+    # runs the transformations
     create_spark_views(spark, supplier_car_data)
     transformed_view = collect_table(spark)
     supplier_df = spark.createDataFrame(data=transformed_view)
@@ -53,7 +54,7 @@ if __name__ == "__main__":
     spark_session = (
             SparkSession.builder
                         .master("local[2]")
-                        .appName("DataTest")
+                        .appName("SupplierCarLoad")
                         .config("spark.executorEnv.PYTHONHASHSEED", "0")
                         .getOrCreate()
     )
